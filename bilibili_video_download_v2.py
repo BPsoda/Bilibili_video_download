@@ -176,16 +176,23 @@ def combine_video(video_list, title):
 if __name__ == '__main__':
     # 用户输入av号或者视频链接地址
     print('*' * 30 + 'B站视频下载小助手' + '*' * 30)
-    start = input('请输入您要下载的B站av号或者视频链接地址:')
-    if start.isdigit() == True:
+    #BV号改版，以下AV号方法不再适用
+    #start = input('请输入您要下载的B站av号或者视频链接地址:')
+    #if start.isdigit() == True:
         # 如果输入的是av号
         # 获取cid的api, 传入aid即可
-        aid = start
-        start_url = 'https://api.bilibili.com/x/web-interface/view?aid=' + aid
-    else:
+        #aid = start
+        #start_url = 'https://api.bilibili.com/x/web-interface/view?aid=' + aid
+    #else:
         # 如果输入的是url (eg: https://www.bilibili.com/video/av46958874/)
-        aid = re.search(r'/av(\d+)/*', start).group(1)
-        start_url = 'https://api.bilibili.com/x/web-interface/view?aid=' + aid
+        #aid = re.search(r'/av(\d+)/*', start).group(1)
+        #start_url = 'https://api.bilibili.com/x/web-interface/view?aid=' + aid
+    starts = input('请输入想要的BV号或网站链接（如有多个请用逗号分隔）').split(',')
+    for each in starts:
+        if each[0:2] == 'BV':
+            start_url = 'https://api.bilibili.com/x/web-interface/view?aid=' + each
+        else:
+            start_url = each
     # qn参数就是视频清晰度
     # 可选值：
     # 116: 高清1080P60 (需要带入大会员的cookie中的SESSDATA才行,普通用户的SESSDATA最多只能下载1080p的视频)
@@ -195,35 +202,35 @@ if __name__ == '__main__':
     # 64: 高清720P (flv720)
     # 32: 清晰480P (flv480)
     # 16: 流畅360P (flv360)
-    print('请输入您要下载视频的清晰度(1080p60:116;1080p+:112;1080p:80;720p60:74;720p:64;480p:32;360p:16; **注意:1080p+,1080p60,720p60,720p都需要带入大会员的cookie中的SESSDATA才行,普通用户的SESSDATA最多只能下载1080p的视频):')
-    quality = input('请填写116或112或80或74或64或32或16:')
-    # 获取视频的cid,title
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
-    }
-    html = requests.get(start_url, headers=headers).json()
-    data = html['data']
-    cid_list = []
-    if '?p=' in start:
-        # 单独下载分P视频中的一集
-        p = re.search(r'\?p=(\d+)', start).group(1)
-        cid_list.append(data['pages'][int(p) - 1])
-    else:
-        # 如果p不存在就是全集下载
-        cid_list = data['pages']
-    # print(cid_list)
-    for item in cid_list:
-        cid = str(item['cid'])
-        title = item['part']
-        title = re.sub(r'[\/\\:*?"<>|]', '', title)  # 替换为空的
-        print('[下载视频的cid]:' + cid)
-        print('[下载视频的标题]:' + title)
-        page = str(item['page'])
-        start_url = start_url + "/?p=" + page
-        video_list = get_play_list(aid, cid, quality)
-        start_time = time.time()
-        down_video(video_list, title, start_url, page)
-        combine_video(video_list, title)
+        print('请输入您要下载视频的清晰度(1080p60:116;1080p+:112;1080p:80;720p60:74;720p:64;480p:32;360p:16; **注意:1080p+,1080p60,720p60,720p都需要带入大会员的cookie中的SESSDATA才行,普通用户的SESSDATA最多只能下载1080p的视频):')
+        quality = input('请填写116或112或80或74或64或32或16:')
+        # 获取视频的cid,title
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
+        }
+        html = requests.get(start_url, headers=headers).json()
+        data = html['data']
+        cid_list = []
+        if '?p=' in each:
+            # 单独下载分P视频中的一集
+            p = re.search(r'\?p=(\d+)', each).group(1)
+            cid_list.append(data['pages'][int(p) - 1])
+        else:
+            # 如果p不存在就是全集下载
+            cid_list = data['pages']
+        # print(cid_list)
+        for item in cid_list:
+            cid = str(item['cid'])
+            title = item['part']
+            title = re.sub(r'[\/\\:*?"<>|]', '', title)  # 替换为空的
+            print('[下载视频的cid]:' + cid)
+            print('[下载视频的标题]:' + title)
+            page = str(item['page'])
+            start_url = start_url + "/?p=" + page
+            video_list = get_play_list(aid, cid, quality)
+            start_time = time.time()
+            down_video(video_list, title, start_url, page)
+            combine_video(video_list, title)
 
     # 如果是windows系统，下载完成后打开下载目录
     currentVideoPath = os.path.join(sys.path[0], 'bilibili_video')  # 当前目录作为下载目录
